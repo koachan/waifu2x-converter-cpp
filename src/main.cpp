@@ -45,7 +45,7 @@
 #pragma comment ( linker, "/entry:\"wmainCRTStartup\"" )
 #endif
 
-
+#include "w2defines.h"
 #include "w2xconv.h"
 
 #ifndef DEFAULT_MODELS_DIRECTORY
@@ -538,12 +538,8 @@ std::wstring generate_output_location(
 void convert_file(ConvInfo info, fs::path inputName, fs::path output)
 {
 	//std::cout << "Operating on: " << fs::absolute(inputName).string() << std::endl;
-
-#if defined(WIN32) && defined(UNICODE)
-	std::wstring outputName = generate_output_location(fs::absolute(inputName).wstring(), output.wstring(), info.mode, info.NRLevel, info.scaleRatio, info.outputFormat);
-#else
-	std::string outputName = generate_output_location(fs::absolute(inputName).string(), output.string(), info.mode, info.NRLevel, info.scaleRatio, info.outputFormat);
-#endif
+	
+	W2X_STRING outputName = generate_output_location(fs::absolute(inputName).W2X_STRING_METHOD(), output.W2X_STRING_METHOD(), info.mode, info.NRLevel, info.scaleRatio, info.outputFormat);
 
 	int _nrLevel = -1;
 
@@ -560,11 +556,7 @@ void convert_file(ConvInfo info, fs::path inputName, fs::path output)
 
 	int error = w2xconv_convert_file(info.converter,
 			outputName.c_str(),
-#if defined(WIN32) && defined(UNICODE)
-			fs::absolute(inputName).wstring().c_str(),
-#else
-			fs::absolute(inputName).string().c_str(),
-#endif
+			fs::absolute(inputName).W2X_STRING_METHOD().c_str(),
 			_nrLevel,
 			_scaleRatio,
 			info.blockSize,
@@ -856,21 +848,16 @@ int main(int argc, char** argv)
 	}
 	
 	//We need to do this conversion because using a TCLAP::ValueArg<fs::path> can not handle spaces.
-#if defined(WIN32) && defined(UNICODE)
-	fs::path input = inputFileName;
-	std::wstring tmpOutput = outputFileName;
-	if (fs::is_directory(input) && (tmpOutput.back() != L'/') && wcscmp(tmpOutput.c_str(), L"auto") != 0)
-	{
-		tmpOutput += L"/";
-	}
-#else
 	fs::path input = cmdInput.getValue();
-	std::string tmpOutput = cmdOutput.getValue();
-	if (fs::is_directory(input) && (tmpOutput.back() != '/') && strcmp(tmpOutput.c_str(), "auto") != 0)
+	#if defined(WIN32) && defined(UNICODE)
+	W2X_STRING tmpOutput = outputFileName;
+	#else
+	W2X_STRING tmpOutput = cmdOutput.getValue();
+	#endif
+	if (fs::is_directory(input) && (tmpOutput.back() != W2X_L('/')) && W2X_STRCMP(tmpOutput.c_str(), W2X_L("auto")) != 0)
 	{
-		tmpOutput += "/";
+		tmpOutput += W2X_L("/");
 	}
-#endif
 	fs::path output = tmpOutput;
 	
 	enum W2XConvGPUMode gpu = W2XCONV_GPU_AUTO;

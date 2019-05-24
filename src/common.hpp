@@ -30,6 +30,34 @@
 
 #define ALIGN_UP(v,a) (((v+(a-1))/(a))*(a))
 
+#if defined(WIN32)
+#include <Windows.h>
+#endif
+#include "w2defines.h"
+
+/*
+#if defined(WIN32) && defined(UNICODE)
+#define W2X_FOPEN(...) _wfopen(##__VA_ARGS__)
+#define W2X_CHAR WCHAR
+#define W2X_L(a) L ## a
+#define W2X_STRLEN(...) wcslen(##__VA_ARGS__)
+#define W2X_IMWRITE(...) write_imageW(##__VA_ARGS__)
+#define W2X_STRING std::wstring
+#define W2X_STRING_METHOD wstring
+#define W2X_STRCMP(...) wcscmp(##__VA_ARGS__)
+#else
+#define W2X_FOPEN(...) fopen(##__VA_ARGS__)
+#define W2X_CHAR char
+#define W2X_L(a) a
+#define W2X_STRLEN(...) strlen(##__VA_ARGS__)
+#define W2X_IMWRITE(...) cv::imwrite(##__VA_ARGS__)
+#define W2X_STRING std::string
+#define W2X_STRING_METHOD string
+#define W2X_STRCMP(...) strcmp(##__VA_ARGS__)
+#endif
+*/
+
+
 void pack_mat(float *out, std::vector<W2Mat> &inputPlanes, int w, int h, int nplane);
 
 void unpack_mat(std::vector<W2Mat> &outputPlanes, const float *in, int w, int h, int nplane);
@@ -53,10 +81,6 @@ void unpack_mat_bgr(W2Mat &outputMat, const float *in, int w, int h);
  * src is exist && dst is exist && dst is older than src  : true
  * otherwise                                              : false
  */
-#if defined(WIN32) && defined(UNICODE)
-#include <Windows.h>
-bool update_test(const WCHAR *dst_path, const WCHAR *src_path);
-#else
-bool update_test(const char *dst_path, const char *src_path);
-#endif
-#endif
+bool update_test(const W2X_CHAR *dst_path, const W2X_CHAR *src_path);
+
+#endif //COMMON_HPP

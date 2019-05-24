@@ -194,34 +194,27 @@ void unpack_mat_rgb_f32(W2Mat &outputMat, const float *in, int w, int h)
 	update_test_win, update_test_apple, update_test_unix, less ifdefmess .
 	Is not too big so duplicates are fine.. and the win to unix one differs quite a lot too.
 */
-/* return true if A is newer than B */ 
-#if defined(WIN32) && defined(UNICODE)
-bool update_test(const WCHAR *dst_path, const WCHAR *src_path)
+#if (defined _WIN32) && defined(UNICODE)
+#define W2X_FIND_DATA WIN32_FIND_DATAW
+#define W2X_FindFirstFile FindFirstFileW
 #else
-bool update_test(const char *dst_path, const char *src_path)
+#define W2X_FIND_DATA WIN32_FIND_DATAA
+#define W2X_FindFirstFile FindFirstFileA
 #endif
+
+/* return true if A is newer than B */ 
+bool update_test(const W2X_CHAR *dst_path, const W2X_CHAR *src_path)
 {
 #if (defined _WIN32)
-#if defined(UNICODE)
-	WIN32_FIND_DATAW dst_st;
-	HANDLE finder = FindFirstFileW(dst_path, &dst_st);
-#else
-	WIN32_FIND_DATAA dst_st;
-	HANDLE finder = FindFirstFileA(dst_path, &dst_st);
-#endif
+	W2X_FIND_DATA dst_st;
+	HANDLE finder = W2X_FindFirstFile(dst_path, &dst_st);
 	if (finder == INVALID_HANDLE_VALUE) {
 		return true;
 	}
 
 	FindClose(finder);
-
-#if defined(UNICODE)
-	WIN32_FIND_DATAW src_st;
-	finder = FindFirstFileW(src_path, &src_st);
-#else
-	WIN32_FIND_DATAA src_st;
-	finder = FindFirstFileA(src_path, &src_st);
-#endif
+	W2X_FIND_DATA src_st;
+	finder = W2X_FindFirstFile(src_path, &src_st);
 	FindClose(finder);
 
 	bool old = false;
@@ -229,7 +222,6 @@ bool update_test(const char *dst_path, const char *src_path)
 	uint64_t src_time = (((uint64_t)src_st.ftLastWriteTime.dwHighDateTime)<<32) | ((uint64_t)src_st.ftLastWriteTime.dwLowDateTime);
 
 	return  src_time > dst_time;
-
 #else
 	struct stat dst_st;
 	int r = stat(dst_path, &dst_st);

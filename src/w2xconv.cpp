@@ -576,8 +576,7 @@ static void setError(W2XConv *conv, enum W2XConvErrorCode code)
 	conv->last_error.code = code;
 }
 
-#if defined(WIN32) && defined(UNICODE)
-int w2xconv_load_models(W2XConv *conv, const WCHAR *model_dir)
+int w2xconv_load_models(W2XConv *conv, const W2X_CHAR *model_dir)
 {
 	struct W2XConvImpl *impl = conv->impl;
 
@@ -590,86 +589,38 @@ int w2xconv_load_models(W2XConv *conv, const WCHAR *model_dir)
 	impl->scale2_models.clear();
 	
 	//FutureNote: Maybe use loop instead of if-spam?
-	if (!w2xc::modelUtility::generateModelFromJSON(modelFileName + L"/noise0_model.json", impl->noise0_models))
+	if (!w2xc::modelUtility::generateModelFromJSON(modelFileName + W2X_L("/noise0_model.json"), impl->noise0_models))
 	{
-		setPathError(conv, W2XCONV_ERROR_MODEL_LOAD_FAILED, modelFileName + L"/noise0_model.json");
+		setPathError(conv, W2XCONV_ERROR_MODEL_LOAD_FAILED, modelFileName + W2X_L("/noise0_model.json"));
 		return -1;
 	}
 
-	if (!w2xc::modelUtility::generateModelFromJSON(modelFileName + L"/noise1_model.json", impl->noise1_models))
+	if (!w2xc::modelUtility::generateModelFromJSON(modelFileName + W2X_L("/noise1_model.json"), impl->noise1_models))
 	{
-		setPathError(conv, W2XCONV_ERROR_MODEL_LOAD_FAILED, modelFileName + L"/noise1_model.json");
+		setPathError(conv, W2XCONV_ERROR_MODEL_LOAD_FAILED, modelFileName + W2X_L("/noise1_model.json"));
 		return -1;
 	}
 
-	if (!w2xc::modelUtility::generateModelFromJSON(modelFileName + L"/noise2_model.json", impl->noise2_models))
+	if (!w2xc::modelUtility::generateModelFromJSON(modelFileName + W2X_L("/noise2_model.json"), impl->noise2_models))
 	{
-		setPathError(conv, W2XCONV_ERROR_MODEL_LOAD_FAILED, modelFileName + L"/noise2_model.json");
+		setPathError(conv, W2XCONV_ERROR_MODEL_LOAD_FAILED, modelFileName + W2X_L("/noise2_model.json"));
 		return -1;
 	}
 
-	if (!w2xc::modelUtility::generateModelFromJSON(modelFileName + L"/noise3_model.json", impl->noise3_models))
+	if (!w2xc::modelUtility::generateModelFromJSON(modelFileName + W2X_L("/noise3_model.json"), impl->noise3_models))
 	{
-		setPathError(conv, W2XCONV_ERROR_MODEL_LOAD_FAILED, modelFileName + L"/noise3_model.json");
+		setPathError(conv, W2XCONV_ERROR_MODEL_LOAD_FAILED, modelFileName + W2X_L("/noise3_model.json"));
 		return -1;
 	}
 
-	if (!w2xc::modelUtility::generateModelFromJSON(modelFileName + L"/scale2.0x_model.json", impl->scale2_models))
+	if (!w2xc::modelUtility::generateModelFromJSON(modelFileName + W2X_L("/scale2.0x_model.json"), impl->scale2_models))
 	{
-		setPathError(conv, W2XCONV_ERROR_MODEL_LOAD_FAILED, modelFileName + L"/scale2.0x_model.json");
+		setPathError(conv, W2XCONV_ERROR_MODEL_LOAD_FAILED, modelFileName + W2X_L("/scale2.0x_model.json"));
 		return -1;
 	}
 
 	return 0;
 }
-
-#else // !WIN32 && !UNICODE
-int w2xconv_load_models(W2XConv *conv, const char *model_dir)
-{
-	struct W2XConvImpl *impl = conv->impl;
-
-	std::string modelFileName(model_dir);
-
-	impl->noise0_models.clear();
-	impl->noise1_models.clear();
-	impl->noise2_models.clear();
-	impl->noise3_models.clear();
-	impl->scale2_models.clear();
-
-	if (!w2xc::modelUtility::generateModelFromJSON(modelFileName + "/noise0_model.json", impl->noise0_models))
-	{
-		setPathError(conv, W2XCONV_ERROR_MODEL_LOAD_FAILED, modelFileName + "/noise0_model.json");
-		return -1;
-	}
-
-	if (!w2xc::modelUtility::generateModelFromJSON(modelFileName + "/noise1_model.json", impl->noise1_models))
-	{
-		setPathError(conv, W2XCONV_ERROR_MODEL_LOAD_FAILED, modelFileName + "/noise1_model.json");
-		return -1;
-	}
-
-	if (!w2xc::modelUtility::generateModelFromJSON(modelFileName + "/noise2_model.json", impl->noise2_models))
-	{
-		setPathError(conv, W2XCONV_ERROR_MODEL_LOAD_FAILED, modelFileName + "/noise2_model.json");
-		return -1;
-	}
-
-	if (!w2xc::modelUtility::generateModelFromJSON(modelFileName + "/noise3_model.json", impl->noise3_models))
-	{
-		setPathError(conv, W2XCONV_ERROR_MODEL_LOAD_FAILED, modelFileName + "/noise3_model.json");
-		return -1;
-	}
-
-	if (!w2xc::modelUtility::generateModelFromJSON(modelFileName + "/scale2.0x_model.json", impl->scale2_models))
-	{
-		setPathError(conv, W2XCONV_ERROR_MODEL_LOAD_FAILED, modelFileName + "/scale2.0x_model.json");
-		return -1;
-
-	}
-
-	return 0;
-}
-#endif
 
 void w2xconv_set_model_3x3
 (
@@ -1837,13 +1788,8 @@ bool write_imageW(const WCHAR* filepath, cv::Mat& img, std::vector<int>& param)
 int w2xconv_convert_file
 (
 	struct W2XConv *conv,
-#if defined(WIN32) && defined(UNICODE)
-	const WCHAR *dst_path,
-	const WCHAR *src_path,
-#else
-	const char *dst_path,
-	const char *src_path,
-#endif
+	const W2X_CHAR *dst_path,
+	const W2X_CHAR *src_path,
 	int denoise_level,
 	double scale,
 	int blockSize,
@@ -1854,11 +1800,7 @@ int w2xconv_convert_file
 
 	FILE *png_fp = nullptr;
 	
-#if defined(WIN32) && defined(UNICODE)
-	png_fp = _wfopen(src_path, L"rb");
-#else
-	png_fp = fopen(src_path, "rb");
-#endif
+	png_fp = W2X_FOPEN(src_path, W2X_L("rb"));
 
 	if (png_fp == nullptr)
 	{
@@ -1896,20 +1838,6 @@ int w2xconv_convert_file
 	{
 		read_imageW(&image_src, src_path, cv::IMREAD_COLOR);
 	}
-	
-	bool dst_png = false;
-	{
-		size_t len = wcslen(dst_path);
-		if (len >= 4) {
-			if (towlower(dst_path[len-4]) == L'.' &&
-			    towlower(dst_path[len-3]) == L'p' &&
-			    towlower(dst_path[len-2]) == L'n' &&
-			    towlower(dst_path[len-1]) == L'g')
-			{
-				dst_png = true;
-			}
-		}
-	}
 #else
 	if (png_rgb)
 	{
@@ -1919,19 +1847,22 @@ int w2xconv_convert_file
 	{
 		image_src = cv::imread(src_path, cv::IMREAD_COLOR);
 	}
+#endif
 
 	bool dst_png = false;
 	{
-		size_t len = strlen(dst_path);
+		size_t len = W2X_STRLEN(dst_path);
 		if (len >= 4)
 		{
-			if (tolower(dst_path[len-4]) == '.' && tolower(dst_path[len-3]) == 'p' && tolower(dst_path[len-2]) == 'n' && tolower(dst_path[len-1]) == 'g')
+			if (tolower(dst_path[len-4]) == W2X_L('.') &&
+				tolower(dst_path[len-3]) == W2X_L('p') &&
+				tolower(dst_path[len-2]) == W2X_L('n') &&
+				tolower(dst_path[len-1]) == W2X_L('g'))
 			{
 				dst_png = true;
 			}
 		}
 	}
-#endif
 	
 	//pieces.push_back(image_src);
 	//image_src.release();	// push_back does deep copy
