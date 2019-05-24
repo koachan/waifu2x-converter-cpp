@@ -2043,11 +2043,7 @@ int w2xconv_convert_file
 		compression_params.push_back(imwrite_params[i]);
 	}
 	
-#if defined(WIN32) && defined(UNICODE)
-	if (!write_imageW(dst_path, image_dst, compression_params))
-#else
-	if (!cv::imwrite(dst_path, image_dst, compression_params))
-#endif
+	if (!W2X_IMWRITE(dst_path, image_dst, compression_params))
 	{
 		setPathError(conv, W2XCONV_ERROR_IMWRITE_FAILED, dst_path);
 		return -1;
