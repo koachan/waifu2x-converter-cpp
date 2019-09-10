@@ -112,110 +112,36 @@ min256(v256_t const &a, v256_t const &b)
 #define UNROLL 5
 
 /* PowerPC AltiVec */
-#define VPACK 1
 #define VEC_NELEM 8
 
-/* Use v256_t as vreg_t so that the compiler will utilize the large amount of
- * registers available.
- * Note: removing the array and struct boxing seems to slow things down.
- *       I currently don't know why it's happening,
- *       so I'm keeping it for now. */
-typedef struct {
-	v256_t v[VPACK];
-} vreg_t;
-
-static inline vreg_t
-madd_vreg(vreg_t const &a, vreg_t const &b, vreg_t const &c)
-{
-	vreg_t ret;
-	for(int i = 0; i < VPACK; i++) {
-		ret.v[i] = madd256(a.v[i], b.v[i], c.v[i]);
-	}
-	return ret;
-}
-
-static inline vreg_t
-add_vreg(vreg_t const &a, vreg_t const &b)
-{
-	vreg_t ret;
-	for(int i = 0; i < VPACK; i++) {
-		ret.v[i] = add256(a.v[i], b.v[i]);
-	}
-	return ret;
-}
-
-static inline vreg_t
-zero_vreg()
-{
-	vreg_t ret;
-	for(int i = 0; i < VPACK; i++) {
-		ret.v[i] = zero();
-	}
-	return ret;
-}
-
-static inline vreg_t
-min_vreg(vreg_t const &a, vreg_t const &b)
-{
-	vreg_t ret;
-	for(int i = 0; i < VPACK; i++) {
-		ret.v[i] = min256(a.v[i], b.v[i]);
-	}
-	return ret;
-}
-
-static inline vreg_t
-max_vreg(vreg_t const &a, vreg_t const &b)
-{
-	vreg_t ret;
-	for(int i = 0; i < VPACK; i++) {
-		ret.v[i] = max256(a.v[i], b.v[i]);
-	}
-	return ret;
-}
-
-static inline vreg_t
-set1_vreg(float a)
-{
-	vreg_t ret;
-	for(int i = 0; i < VPACK; i++) {
-		ret.v[i] = set1(a);
-	}
-	return ret;
-}
+#define vreg_t    v256_t
+#define madd_vreg madd256
+#define add_vreg  add256
+#define zero_vreg zero
+#define min_vreg  min256
+#define max_vreg  max256
+#define set1_vreg set1
 
 static inline void
 store_vreg(const unsigned char *ptr, vreg_t const &val)
 {
 	float *p = (float*) ptr;
-	for(int i = 0; i < VPACK; i++) {
-		store256(p+i*8, val.v[i]);
-	}
+	store256(p, val);
 }
 
 static inline vreg_t
 load_vreg(const unsigned char *ptr)
 {
-	vreg_t ret;
 	float *p = (float*) ptr;
-	for(int i = 0; i < VPACK; i++) {
-		ret.v[i] = load256(p+i*8);
-	}
-	return ret;
+	return load256(p);
 }
 
 static inline vreg_t
 load_vreg_broadcast(const unsigned char *ptr)
 {
-	vreg_t ret;
 	float *p = (float*) ptr;
-	for(int i = 0; i < VPACK; i++) {
-		ret.v[i] = load_broadcast(p);
-	}
-	return ret;
+	return load_broadcast(p);
 }
-
-#undef VPACK
 
 #define SIMD_OPLANE
 
