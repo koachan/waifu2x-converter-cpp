@@ -1,17 +1,17 @@
 /*
 * The MIT License (MIT)
 * Copyright (c) 2015 amigo(white luckers), tanakamura, DeadSix27, YukihoAA and contributors
-* 
+*
 * Permission is hereby granted, free of charge, to any person obtaining a copy
 * of this software and associated documentation files (the "Software"), to deal
 * in the Software without restriction, including without limitation the rights
 * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
 * copies of the Software, and to permit persons to whom the Software is
 * furnished to do so, subject to the following conditions:
-* 
+*
 * The above copyright notice and this permission notice shall be included in all
 * copies or substantial portions of the Software.
-* 
+*
 * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
 * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
 * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -82,7 +82,7 @@ namespace w2xc
 		std::vector<std::thread> workerThreads;
 		std::vector<W2Mat> inputPlanes_w2 = extract_viewlist_from_cvmat(inputPlanes);
 		std::vector<W2Mat> outputPlanes_w2 = extract_viewlist_from_cvmat(outputPlanes);
-		
+
 		int worksPerThread = nOutputPlanes / nJob;
 		int nJob = modelUtility::getInstance().getNumberOfJobs();
 
@@ -230,7 +230,7 @@ namespace w2xc
 		int h = size.height;
 		std::vector<std::thread> workerThreads;
 		int nJob = modelUtility::getInstance().getNumberOfJobs();
-		
+
 		for (int ji=0; ji<nJob; ji++)
 		{
 			workerThreads.emplace_back(std::thread(thread_func));
@@ -454,6 +454,12 @@ namespace w2xc
 						simd_oplane = true;
 						break;
 					}
+					default:
+					{
+						simd_vec_width = 4;
+						simd_oplane = true;
+						break;
+					}
 				}
 			}
 
@@ -462,7 +468,7 @@ namespace w2xc
 
 			if (simd_oplane || simd_iplane)
 			{
-				/* 
+				/*
 				 * weight_chunk (16x32x3x4 = 6144[Byte])
 				 * (where op_block_size=16, ip_block_size=32)
 				 *
@@ -682,7 +688,9 @@ namespace w2xc
 #endif
 					default:
 					{
-						filter_CV(env, packed_input_buf, packed_output_buf, size);
+						filter_Generic_impl(env, packed_input, packed_output,
+								nInputPlanes, nOutputPlanes, fbiases_flat, weight_flat,
+								size.width, size.height, nJob);
 						break;
 					}
 				}
@@ -867,7 +875,19 @@ namespace w2xc
 #endif
 					default:
 					{
-						filter_CV(env, packed_input_buf, packed_output_buf, size);
+						filter_Generic_impl
+						(
+							env,
+							packed_input,
+							packed_output,
+							nInputPlanes,
+							nOutputPlanes,
+							fbiases_flat,
+							weight_flat,
+							size.width,
+							size.height,
+							nJob
+						);
 						break;
 					}
 				}
@@ -1016,11 +1036,11 @@ namespace w2xc
 		std::vector<cv::Mat> inputPlanes;
 		std::vector<cv::Mat> weightMatrices;
 		std::vector<cv::Mat> outputPlanes;
-		
+
 		extract_viewlist_to_cvmat(inputPlanes, inputPlanes_w2);
 		extract_viewlist_to_cvmat(weightMatrices, weightMatrices_w2);
 		extract_viewlist_to_cvmat(outputPlanes, outputPlanes_w2);
-				 
+
 		cv::Size ipSize = inputPlanes[0].size();
 		// filter processing
 		// input : inputPlanes
@@ -1135,7 +1155,7 @@ namespace w2xc
 						writeMatrix.at<float>(yi, xi) = (float) v;
 					}
 				}
-		
+
 				this->weights.emplace_back(std::move(writeMatrix));
 			}
 		}
@@ -1182,7 +1202,7 @@ namespace w2xc
 			fclose(binfp);
 		}
 		else
-		{		
+		{
 			std::ifstream jsonFile;
 
 			jsonFile.open(fileName);
@@ -1219,7 +1239,7 @@ namespace w2xc
 			{
 				size_t nModel = objectArray.size();
 				fwrite(&nModel, 4, 1, binfp);
-				
+
 				for (auto&& m : models)
 				{
 					uint32_t nInputPlanes = m->getNInputPlanes();

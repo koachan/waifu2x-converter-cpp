@@ -296,6 +296,7 @@ endif()
 
 add_library(w2xc SHARED
 	src/modelHandler.cpp ${OPT_SOURCES}
+	src/modelHandler_generic.cpp
 	src/modelHandler_OpenCL.cpp src/convertRoutine.cpp src/threadPool.cpp
 	src/modelHandler_CUDA.cpp src/w2xconv.cpp src/common.cpp
 	src/cvwrap.cpp
@@ -321,6 +322,8 @@ if(CMAKE_COMPILER_IS_GNUCXX OR ${CMAKE_CXX_COMPILER_ID} MATCHES "^(Apple)?Clang$
 	endif()
 
 	set(CMAKE_CXX_FLAGS_RELEASE "-O2 ${REMOVE_SYMBOL}")
+
+	set_source_files_properties(src/modelHandler_generic.cpp PROPERTIES COMPILE_FLAGS "${CMAKE_CXX_FLAGS} -O3 -ftree-vectorize ${REMOVE_SYMBOL}")
 
 	set_source_files_properties(src/modelHandler_avx.cpp PROPERTIES COMPILE_FLAGS "${CMAKE_CXX_FLAGS} -O2 -mavx ${REMOVE_SYMBOL}")
 	set_source_files_properties(src/modelHandler_fma.cpp PROPERTIES COMPILE_FLAGS "${CMAKE_CXX_FLAGS} -O2 -mfma ${REMOVE_SYMBOL}")
